@@ -4,13 +4,16 @@
 // words are repeated with a higher frequency.
 //
 
-import React, { useState } from "react";
-import { View, Text, Button, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, Button, StyleSheet, TouchableOpacity } from "react-native";
+import { Feather } from "@expo/vector-icons"; // speaker icon
+import * as Speech from "expo-speech"; // Text to speech
 
 const flashcards = [
   {
     id: 1,
     german: "Hallo",
+    de_irr: "",
     de_sent: "Er begrüßt ihn mit Hallo",
     english: "Hello",
     en_sent: "He greets him with Hello",
@@ -19,6 +22,7 @@ const flashcards = [
   {
     id: 2,
     german: "essen",
+    de_irr: "isst, aß, hat gegessen",
     de_sent: "Er isst gerne Pommes mit Mayonnaise.",
     english: "to eat",
     en_sent: "He likes to eat French fries with mayonnaise",
@@ -27,6 +31,7 @@ const flashcards = [
   {
     id: 3,
     german: "das Boot",
+    de_irr: "-e",
     de_sent: "Das Boot fährt auf dem Wasser.",
     english: "the boat",
     en_sent: "The boat is sailing on the water.",
@@ -35,6 +40,7 @@ const flashcards = [
   {
     id: 4,
     german: "der Mensch",
+    de_irr: "-en",
     de_sent: "Der Mensch ist das einzige Lebewesen mit Vernunft.",
     english: "the human",
     en_sent: "Humans are the only beings with reason.",
@@ -43,6 +49,7 @@ const flashcards = [
   {
     id: 5,
     german: "der Tisch",
+    de_irr: "-e",
     de_sent: "Auf dem Tisch steht eine Vase.",
     english: "the table",
     en_sent: "There is a vase on the table.",
@@ -64,6 +71,11 @@ const FlashcardApp = () => {
     setShowTranslation(true);
   };
 
+  const handlePronunciation = async () => {
+    const germanWord = flashcards[currentCardIndex].german;
+    await Speech.speak(germanWord, { language: "de" });
+  };
+
   const handleDifficulty = (points) => {
     const updatedFlashcards = [...flashcards];
     const updatedPoints = currentCardPoints + points;
@@ -79,6 +91,15 @@ const FlashcardApp = () => {
     setDifficulty(null);
     setCurrentCardPoints(flashcards[randomIndex].points);
   };
+
+  const handleSentencePronunciation = async () => {
+    const germanSentence = flashcards[currentCardIndex].de_sent;
+    await Speech.speak(germanSentence, { language: "de" });
+  };
+
+  useEffect(() => {
+    Speech.stop(); // Stop any ongoing speech when component unmounts
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -112,10 +133,29 @@ const FlashcardApp = () => {
             <View style={styles.translatedBox}>
               <Text style={styles.cardText}>
                 {flashcards[currentCardIndex].german}
+                {flashcards[currentCardIndex].de_irr
+                  ? `, ${flashcards[currentCardIndex].de_irr}`
+                  : ""}
               </Text>
               <Text style={styles.sentenceText}>
                 {flashcards[currentCardIndex].de_sent}
               </Text>
+              <View style={styles.wordSpeakerContainer}>
+                <TouchableOpacity
+                  onPress={handlePronunciation}
+                  style={styles.wordSpeakerIcon}
+                >
+                  <Feather name="volume-2" size={24} color="black" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.sentenceSpeakerContainer}>
+                <TouchableOpacity
+                  onPress={handleSentencePronunciation}
+                  style={styles.sentenceSpeakerIcon}
+                >
+                  <Feather name="volume-2" size={24} color="black" />
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         )}
@@ -142,7 +182,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "darkgray",
+    backgroundColor: "white",
   },
   header: {
     position: "absolute",
@@ -175,13 +215,34 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     marginBottom: 10,
+    position: "relative", // Add this line
   },
   difficultyButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "80%",
-    marginTop: 20,
-    marginBottom: 0,
+    position: "absolute",
+    bottom: 50,
+  },
+  wordSpeakerContainer: {
+    position: "absolute", // Add this line
+    marginTop: 15, // Add this line
+    right: 5, // Add this line
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  sentenceSpeakerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  wordSpeakerIcon: {
+    marginRight: 10,
+    marginTop: 10,
+  },
+  sentenceSpeakerIcon: {
+    // You can add styles specific to the sentence speaker icon here if needed
   },
 });
 
