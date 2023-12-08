@@ -242,7 +242,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   sentenceSpeakerIcon: {
-    // You can add styles specific to the sentence speaker icon here if needed
   },
 });
 
