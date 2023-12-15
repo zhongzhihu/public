@@ -1,3 +1,6 @@
+// File is still work-in-progress. Spaced repetition algorithm
+// is not fully implemented yet.
+
 import React, { useState } from "react";
 import {
   View,
