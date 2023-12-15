@@ -46,6 +46,7 @@ const initialRatings = flashcards.map((card) => ({
   reviews: 0,
   lastReviewed: null,
   nextReview: null,
+  reviewedToday: false, // New property
 }));
 
 const calculateNextReviewDate = (rating, lastReviewed) => {
@@ -65,8 +66,17 @@ const FlashcardApp = () => {
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showTranslation, setShowTranslation] = useState(false);
   const [ratings, setRatings] = useState(initialRatings);
-  const [numCardsToReview, setNumCardsToReview] = useState(5);
+  const [numCardsToReview, setNumCardsToReview] = useState(2);
   const [startScreenVisible, setStartScreenVisible] = useState(true);
+
+  const resetReviewedToday = () => {
+    setRatings(
+      ratings.map((r) => ({
+        ...r,
+        reviewedToday: false,
+      }))
+    );
+  };
 
   const handleShowTranslation = () => {
     setShowTranslation(true);
@@ -92,6 +102,7 @@ const FlashcardApp = () => {
             reviews: r.reviews + 1,
             lastReviewed: newLastReviewed,
             nextReview: calculateNextReviewDate(rating, newLastReviewed),
+            reviewedToday: true,
           };
         }
         return r;
@@ -102,23 +113,38 @@ const FlashcardApp = () => {
   };
 
   const handleNextCard = () => {
-    // Add logic to select the next card based on the nextReview dates
-    const sortedCards = ratings
-      .filter((r) => r.nextReview <= new Date())
-      .sort((a, b) => a.nextReview - b.nextReview);
+    const reviewedCount = ratings.filter((r) => r.reviewedToday).length;
+    if (reviewedCount >= numCardsToReview) {
+      alert("Review session complete for today!");
+      return;
+    }
 
-    const nextCardIndex =
-      sortedCards.length > 0
-        ? flashcards.findIndex((fc) => fc.id === sortedCards[0].id)
-        : Math.floor(Math.random() * flashcards.length);
+    // Logic to select the next card
+    let nextCardIndex = -1;
+    let minNextReviewDate = new Date(8640000000000000); // A distant future date
+
+    for (let i = 0; i < flashcards.length; i++) {
+      const cardRating = ratings.find((r) => r.id === flashcards[i].id);
+      if (!cardRating.reviewedToday && cardRating.nextReview <= new Date()) {
+        if (cardRating.nextReview < minNextReviewDate) {
+          minNextReviewDate = cardRating.nextReview;
+          nextCardIndex = i;
+        }
+      }
+    }
+
+    if (nextCardIndex === -1) {
+      // If no cards are due for review, randomly select a card
+      nextCardIndex = Math.floor(Math.random() * flashcards.length);
+    }
 
     setCurrentCardIndex(nextCardIndex);
     setShowTranslation(false);
   };
 
   const handleStart = () => {
+    resetReviewedToday();
     setStartScreenVisible(false);
-    // Additional logic for starting the review can be added here
   };
 
   if (startScreenVisible) {
@@ -134,7 +160,7 @@ const FlashcardApp = () => {
             setNumCardsToReview(num);
           }}
           keyboardType="numeric"
-          defaultValue="5"
+          defaultValue="2"
           value={String(numCardsToReview)}
         />
         <Button title="Start Review" color="white" onPress={handleStart} />
@@ -246,6 +272,7 @@ const FlashcardApp = () => {
   );
 };
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -315,5 +342,3 @@ const styles = StyleSheet.create({
 });
 
 export default FlashcardApp;
-
-
